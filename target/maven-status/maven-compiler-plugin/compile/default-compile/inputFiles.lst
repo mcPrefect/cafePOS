@@ -1,0 +1,14 @@
+/home/michael/cafe-pos-week2/src/main/java/com/cafepos/catalog/payment/CashPayment.java
+/home/michael/cafe-pos-week2/src/main/java/com/cafepos/catalog/payment/PaymentStrategy.java
+/home/michael/cafe-pos-week2/src/main/java/com/cafepos/demo/Week2Demo.java
+/home/michael/cafe-pos-week2/src/main/java/com/cafepos/catalog/Product.java
+/home/michael/cafe-pos-week2/src/main/java/com/cafepos/demo/Week3Demo.java
+/home/michael/cafe-pos-week2/src/main/java/com/cafepos/catalog/payment/WalletPayment.java
+/home/michael/cafe-pos-week2/src/main/java/com/cafepos/domain/LineItem.java
+/home/michael/cafe-pos-week2/src/main/java/com/cafepos/catalog/SimpleProduct.java
+/home/michael/cafe-pos-week2/src/main/java/com/cafepos/common/Money.java
+/home/michael/cafe-pos-week2/src/main/java/com/cafepos/catalog/Catalog.java
+/home/michael/cafe-pos-week2/src/main/java/com/cafepos/domain/Order.java
+/home/michael/cafe-pos-week2/src/main/java/com/cafepos/domain/OrderIds.java
+/home/michael/cafe-pos-week2/src/main/java/com/cafepos/catalog/InMemoryCatalog.java
+/home/michael/cafe-pos-week2/src/main/java/com/cafepos/catalog/payment/CardPayment.java

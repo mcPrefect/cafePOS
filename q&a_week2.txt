@@ -1,0 +1,20 @@
+1. Why do we use a dedicated Money class instead of storing prices as
+double?
+
+Control precision of currency values.
+Keep types constant so no errors later in code with inputs of doubles vs ints vs Money
+Money class can handle rounding rules, formatting, validation
+
+2. What benefits do we get from enforcing constraints such as “quantity
+must be greater than zero”?
+
+Catch errors early instead of late.
+Gurantee that our objects can be used further on down the road if we control what they contain.
+Can't have negative values in real world
+
+3. Did composition (Order has LineItem) feel more natural than
+inheritance? Why or why not?
+
+Order manages the collection, LineItem represents individual items
+Composition felt more natural because an Order 'has' LineItems rather than 'being a type of' LineItem
+Lineitems may need to be used in other contexts
