@@ -49,7 +49,6 @@ class PaymentStrategyTest {
         var order = new Order(200);
         order.addItem(new LineItem(p, 1));
         
-        // Should not throw exception
         order.pay(new CashPayment());
     }
     
@@ -59,7 +58,6 @@ class PaymentStrategyTest {
         var order = new Order(300);
         order.addItem(new LineItem(p, 1));
         
-        // Should not throw exception
         order.pay(new CardPayment("1234567890123456"));
     }
     
@@ -69,7 +67,6 @@ class PaymentStrategyTest {
         var order = new Order(400);
         order.addItem(new LineItem(p, 1));
         
-        // Should not throw exception
         order.pay(new WalletPayment("alice-wallet-01"));
     }
 }
