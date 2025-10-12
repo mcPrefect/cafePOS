@@ -13,7 +13,7 @@ public final class SizeLarge extends ProductDecorator {
 
     @Override
     public String name() {
-        return base.name() + "(Large)";
+        return base.name() + " (Large)";
     }
 
     @Override
