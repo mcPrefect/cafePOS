@@ -4,16 +4,16 @@ import com.cafepos.catalog.Priced;
 import com.cafepos.catalog.Product;
 import com.cafepos.common.Money;
 
-public final class ExtraShot extends ProductDecorator {
-    private static final Money SURCHARGE = Money.of(0.80);
+public final class Syrup extends ProductDecorator {
+    private static final Money SURCHARGE = Money.of(0.40);
 
-    public ExtraShot(Product base) {
+    public Syrup(Product base) {
         super(base);
     }
 
     @Override
     public String name() {
-        return base.name() + "+ Extra Shot";
+        return base.name() + "+ Syrup";
     }
 
     @Override
