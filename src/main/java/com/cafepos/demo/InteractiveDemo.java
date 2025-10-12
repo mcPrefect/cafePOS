@@ -26,7 +26,7 @@ public final class InteractiveDemo {
     private static Scanner scanner;
     private static Catalog catalog;
     private static ProductFactory factory;
-    
+
     // Order states
     private enum OrderState {
         TAKING_ORDER,
@@ -34,12 +34,12 @@ public final class InteractiveDemo {
         PAID,
         COMPLETED
     }
-    
+
     public static void main(String[] args) {
         scanner = new Scanner(System.in);
         setupCatalog();
         factory = new ProductFactory();
-        
+
         boolean running = true;
         while (running) {
             System.out.println("\n╔════════════ MAIN MENU ═════════════╗");
@@ -47,22 +47,22 @@ public final class InteractiveDemo {
             System.out.println("║ 2. Exit System                     ║");
             System.out.println("╚════════════════════════════════════╝");
             System.out.print("Choose option: ");
-            
+
             int choice = getIntInput();
-            
+
             switch (choice) {
                 case 1 -> processNewOrder();
                 case 2 -> {
                     running = false;
-                    System.out.println("\n✓ Thank you for using Café POS! Goodbye! 👋\n");
+                    System.out.println("\n✓ Thank you for using Café POS! Goodbye!\n");
                 }
                 default -> System.out.println("❌ Invalid option!");
             }
         }
-        
+
         scanner.close();
     }
-    
+
     private static void setupCatalog() {
         catalog = new InMemoryCatalog();
         catalog.add(new SimpleProduct("P-ESP", "Espresso", Money.of(2.50)));
@@ -74,28 +74,29 @@ public final class InteractiveDemo {
         catalog.add(new SimpleProduct("P-CRO", "Croissant", Money.of(2.75)));
         catalog.add(new SimpleProduct("P-MUF", "Muffin", Money.of(3.00)));
     }
-    
+
     private static void processNewOrder() {
         Order order = new Order(OrderIds.next());
         OrderState state = OrderState.TAKING_ORDER;
-        
+
         // Register observers
         order.register(new KitchenDisplay());
         order.register(new DeliveryDesk());
         order.register(new CustomerNotifier());
-        
+
         System.out.println("\nCreated Order #" + order.id());
         System.out.println("✓ Observers registered\n");
-        
+
         while (state != OrderState.COMPLETED) {
-            switch (state) {
-                case TAKING_ORDER -> state = takingOrderMenu(order);
-                case READY_TO_PAY -> state = paymentMenu(order);
-                case PAID -> state = fulfillmentMenu(order);
-            }
+            state = switch (state) {
+                case TAKING_ORDER -> takingOrderMenu(order);
+                case READY_TO_PAY -> paymentMenu(order);
+                case PAID -> fulfillmentMenu(order);
+                case COMPLETED -> OrderState.COMPLETED; // Never reached, but satisfies compiler
+            };
         }
     }
-    
+
     private static OrderState takingOrderMenu(Order order) {
         System.out.println("\n╔═════════════ ORDER #" + order.id() + " - TAKING ORDER ══════════════╗");
         System.out.println("║                                                       ║");
@@ -111,9 +112,9 @@ public final class InteractiveDemo {
         System.out.println("║ 11. Cancel Order                                      ║");
         System.out.println("╚═══════════════════════════════════════════════════════╝");
         System.out.print("Choose option: ");
-        
+
         int choice = getIntInput();
-        
+
         try {
             switch (choice) {
                 case 1 -> addCustomizedDrink(order, "P-ESP", "Espresso", Money.of(2.50));
@@ -150,29 +151,29 @@ public final class InteractiveDemo {
         } catch (Exception e) {
             System.out.println("❌ Error: " + e.getMessage());
         }
-        
+
         return OrderState.TAKING_ORDER;
     }
-    
+
     private static void addCustomizedDrink(Order order, String id, String name, Money basePrice) {
         Product drink = new SimpleProduct(id, name, basePrice);
-        
+
         System.out.println("\n--- Customize " + name + " ---");
         System.out.println("Add extras? (y/n): ");
         String response = scanner.nextLine().trim().toLowerCase();
-        
+
         if (response.equals("y")) {
             System.out.println("\n1. Extra Shot (+0.80)");
             System.out.println("2. Oat Milk (+0.50)");
             System.out.println("3. Syrup (+0.40)");
             System.out.println("4. Large Size (+0.70)");
             System.out.println("0. Done customizing");
-            
+
             boolean customizing = true;
             while (customizing) {
                 System.out.print("Add option (0 when done): ");
                 int option = getIntInput();
-                
+
                 switch (option) {
                     case 1 -> {
                         drink = new ExtraShot(drink);
@@ -195,20 +196,20 @@ public final class InteractiveDemo {
                 }
             }
         }
-        
+
         order.addItem(new LineItem(drink, 1));
         System.out.println("✓ Added: " + drink.name());
     }
-    
+
     private static void addFromFactory(Order order) {
         System.out.println("\n--- Factory Recipe Builder ---");
         System.out.println("Base codes: ESP, LAT, CAP, AME");
         System.out.println("Add-ons: SHOT (extra shot), OAT (oat milk), SYP (syrup), L (large)");
         System.out.println("Example: ESP+SHOT+OAT+L");
         System.out.print("Enter recipe: ");
-        
+
         String recipe = scanner.nextLine().trim();
-        
+
         try {
             Product product = factory.create(recipe);
             order.addItem(new LineItem(product, 1));
@@ -217,10 +218,10 @@ public final class InteractiveDemo {
             System.out.println("❌ Invalid recipe: " + e.getMessage());
         }
     }
-    
+
     private static OrderState paymentMenu(Order order) {
         showOrderSummary(order);
-        
+
         System.out.println("\n╔════════════ PAYMENT ═══════════════╗");
         System.out.println("║ 1. Pay with Cash                   ║");
         System.out.println("║ 2. Pay with Card                   ║");
@@ -229,9 +230,9 @@ public final class InteractiveDemo {
         System.out.println("║ 5. Cancel Order                    ║");
         System.out.println("╚════════════════════════════════════╝");
         System.out.print("Choose payment method: ");
-        
+
         int choice = getIntInput();
-        
+
         try {
             switch (choice) {
                 case 1 -> {
@@ -273,7 +274,7 @@ public final class InteractiveDemo {
             return OrderState.READY_TO_PAY;
         }
     }
-    
+
     private static OrderState fulfillmentMenu(Order order) {
         System.out.println("\n╔════════════ FULFILLMENT ═══════════╗");
         System.out.println("║ Order #" + order.id() + " has been paid          ║");
@@ -283,9 +284,9 @@ public final class InteractiveDemo {
         System.out.println("║ 3. Complete Order                  ║");
         System.out.println("╚════════════════════════════════════╝");
         System.out.print("Choose option: ");
-        
+
         int choice = getIntInput();
-        
+
         switch (choice) {
             case 1 -> {
                 System.out.println("\n Marking order ready...");
@@ -299,15 +300,15 @@ public final class InteractiveDemo {
             }
             default -> System.out.println(" Invalid option!");
         }
-        
+
         return OrderState.PAID;
     }
-    
+
     private static void showOrderSummary(Order order) {
         System.out.println("\n╔════════════ ORDER SUMMARY ═════════════╗");
         System.out.println("  Order #" + order.id());
         System.out.println("  ─────────────────────────────────────");
-        
+
         if (order.items().isEmpty()) {
             System.out.println("  (No items yet)");
         } else {
@@ -316,26 +317,26 @@ public final class InteractiveDemo {
                 System.out.printf("  %40s%n", li.lineTotal() + " EUR");
             }
         }
-        
+
         System.out.println("  ─────────────────────────────────────");
         System.out.println("  Subtotal: " + order.subtotal() + " EUR");
         System.out.println("  Tax (10%): " + order.taxAtPercent(10) + " EUR");
         System.out.println("  TOTAL: " + order.totalWithTax(10) + " EUR");
         System.out.println("╚════════════════════════════════════════╝");
     }
-    
+
     private static void showReceipt(Order order) {
         System.out.println("\n╔════════════════════════════════════════╗");
         System.out.println("║            CAFÉ RECEIPT                ║");
         System.out.println("╠════════════════════════════════════════╣");
         System.out.println("  Order #" + order.id());
         System.out.println("  ────────────────────────────────────");
-        
+
         for (LineItem li : order.items()) {
             System.out.printf("  %-28s x%d%n", li.product().name(), li.quantity());
             System.out.printf("  %38s%n", li.lineTotal() + " EUR");
         }
-        
+
         System.out.println("  ────────────────────────────────────");
         System.out.println("  Subtotal:        " + order.subtotal() + " EUR");
         System.out.println("  Tax (10%):       " + order.taxAtPercent(10) + " EUR");
@@ -345,7 +346,7 @@ public final class InteractiveDemo {
         System.out.println("║   Thank you for your order!            ║");
         System.out.println("╚════════════════════════════════════════╝");
     }
-    
+
     private static int getIntInput() {
         while (true) {
             try {
