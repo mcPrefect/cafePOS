@@ -2,7 +2,7 @@ package com.cafepos.catalog;
 
 import com.cafepos.common.Money;
 
-public final class SimpleProduct implements Product {
+public final class SimpleProduct implements Product, Priced {
     private final String id;
     private final String name;
     private final Money basePrice;
@@ -33,5 +33,10 @@ public SimpleProduct(String id, String name, Money basePrice) {
     @Override
     public Money basePrice() {
         return basePrice;
+    }
+
+    @Override
+    public Money price() {
+        return basePrice; // For simple products, price = basePrice
     }
 }
