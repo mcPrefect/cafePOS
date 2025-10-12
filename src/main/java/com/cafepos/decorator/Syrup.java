@@ -13,7 +13,7 @@ public final class Syrup extends ProductDecorator {
 
     @Override
     public String name() {
-        return base.name() + "+ Syrup";
+        return base.name() + " + Syrup";
     }
 
     @Override

@@ -13,7 +13,7 @@ public final class ExtraShot extends ProductDecorator {
 
     @Override
     public String name() {
-        return base.name() + "+ Extra Shot";
+        return base.name() + " + Extra Shot";
     }
 
     @Override

@@ -13,7 +13,7 @@ public final class OatMilk extends ProductDecorator {
 
     @Override
     public String name() {
-        return base.name() + "+ Oat Milk";
+        return base.name() + " + Oat Milk";
     }
 
     @Override
