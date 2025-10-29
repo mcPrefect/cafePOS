@@ -92,7 +92,7 @@ public final class InteractiveDemo {
                 case TAKING_ORDER -> takingOrderMenu(order);
                 case READY_TO_PAY -> paymentMenu(order);
                 case PAID -> fulfillmentMenu(order);
-                case COMPLETED -> OrderState.COMPLETED; // Never reached, but satisfies compiler
+                case COMPLETED -> OrderState.COMPLETED; 
             };
         }
     }
@@ -106,7 +106,7 @@ public final class InteractiveDemo {
         System.out.println("║  3. Cappuccino      3.00     7. Muffin           3.00 ║");
         System.out.println("║  4. Americano       2.80                              ║");
         System.out.println("║                                                       ║");
-        System.out.println("║  8. Use Factory (Recipe Code)                         ║");
+        System.out.println("║  8. Use Recipe Code                                   ║");
         System.out.println("║  9. View Current Order                                ║");
         System.out.println("║ 10. Proceed to Payment                                ║");
         System.out.println("║ 11. Cancel Order                                      ║");
@@ -202,7 +202,7 @@ public final class InteractiveDemo {
     }
 
     private static void addFromFactory(Order order) {
-        System.out.println("\n--- Factory Recipe Builder ---");
+        System.out.println("\n--- Recipe Builder ---");
         System.out.println("Base codes: ESP, LAT, CAP, AME");
         System.out.println("Add-ons: SHOT (extra shot), OAT (oat milk), SYP (syrup), L (large)");
         System.out.println("Example: ESP+SHOT+OAT+L");
@@ -226,7 +226,7 @@ public final class InteractiveDemo {
         System.out.println("║ 1. Pay with Cash                   ║");
         System.out.println("║ 2. Pay with Card                   ║");
         System.out.println("║ 3. Pay with Digital Wallet         ║");
-        System.out.println("║ 4. Back to Order (add more items)  ║");
+        System.out.println("║ 4. Back to Order                   ║");
         System.out.println("║ 5. Cancel Order                    ║");
         System.out.println("╚════════════════════════════════════╝");
         System.out.print("Choose payment method: ");
@@ -279,7 +279,7 @@ public final class InteractiveDemo {
         System.out.println("\n╔════════════ FULFILLMENT ═══════════╗");
         System.out.println("║ Order #" + order.id() + " has been paid          ║");
         System.out.println("║                                    ║");
-        System.out.println("║ 1. Mark Order Ready (for pickup)   ║");
+        System.out.println("║ 1. Mark Order Ready                ║");
         System.out.println("║ 2. View Receipt                    ║");
         System.out.println("║ 3. Complete Order                  ║");
         System.out.println("╚════════════════════════════════════╝");
@@ -291,7 +291,7 @@ public final class InteractiveDemo {
             case 1 -> {
                 System.out.println("\n Marking order ready...");
                 order.markReady();
-                System.out.println("✓ Order ready for pickup/delivery!");
+                System.out.println("✓ Order ready for pickup!");
             }
             case 2 -> showReceipt(order);
             case 3 -> {
