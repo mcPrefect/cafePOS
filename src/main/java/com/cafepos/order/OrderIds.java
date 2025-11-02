@@ -1,4 +1,4 @@
-package com.cafepos.domain;
+package com.cafepos.order;
 
 public final class OrderIds {
     private static long counter = 1000; 

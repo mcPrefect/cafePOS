@@ -1,3 +1,0 @@
-[Card] Customer paid 2.75 EUR with card ****3456
-[Wallet] Customer paid 2.75 EUR via wallet alice-wallet-01
-[Cash] Customer paid 3.85 EUR

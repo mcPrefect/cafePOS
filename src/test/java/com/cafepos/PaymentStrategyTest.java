@@ -5,13 +5,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
 
 import com.cafepos.catalog.SimpleProduct;
-import com.cafepos.catalog.payment.CardPayment;
-import com.cafepos.catalog.payment.CashPayment;
-import com.cafepos.catalog.payment.PaymentStrategy;
-import com.cafepos.catalog.payment.WalletPayment;
 import com.cafepos.common.Money;
-import com.cafepos.domain.LineItem;
-import com.cafepos.domain.Order;
+import com.cafepos.order.LineItem;
+import com.cafepos.order.Order;
+import com.cafepos.payment.CardPayment;
+import com.cafepos.payment.CashPayment;
+import com.cafepos.payment.PaymentStrategy;
+import com.cafepos.payment.WalletPayment;
 
 class PaymentStrategyTest {
     

@@ -1,7 +1,7 @@
 package com.cafepos.observer;
 
-import com.cafepos.domain.Order;
 import com.cafepos.domain.OrderObserver;
+import com.cafepos.order.Order;
 
 public final class CustomerNotifier implements OrderObserver {
     @Override

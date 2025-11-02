@@ -6,21 +6,21 @@ import com.cafepos.catalog.Catalog;
 import com.cafepos.catalog.InMemoryCatalog;
 import com.cafepos.catalog.Product;
 import com.cafepos.catalog.SimpleProduct;
-import com.cafepos.catalog.payment.CardPayment;
-import com.cafepos.catalog.payment.CashPayment;
-import com.cafepos.catalog.payment.WalletPayment;
 import com.cafepos.common.Money;
 import com.cafepos.decorator.ExtraShot;
 import com.cafepos.decorator.OatMilk;
 import com.cafepos.decorator.SizeLarge;
 import com.cafepos.decorator.Syrup;
-import com.cafepos.domain.LineItem;
-import com.cafepos.domain.Order;
-import com.cafepos.domain.OrderIds;
 import com.cafepos.factory.ProductFactory;
 import com.cafepos.observer.CustomerNotifier;
 import com.cafepos.observer.DeliveryDesk;
 import com.cafepos.observer.KitchenDisplay;
+import com.cafepos.order.LineItem;
+import com.cafepos.order.Order;
+import com.cafepos.order.OrderIds;
+import com.cafepos.payment.CardPayment;
+import com.cafepos.payment.CashPayment;
+import com.cafepos.payment.WalletPayment;
 
 public final class InteractiveDemo {
     private static Scanner scanner;

@@ -1,6 +1,7 @@
 package com.cafepos.catalog;
 
 import com.cafepos.common.Money;
+import com.cafepos.decorator.Priced;
 
 public final class SimpleProduct implements Product, Priced {
     private final String id;

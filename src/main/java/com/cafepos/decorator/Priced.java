@@ -1,4 +1,4 @@
-package com.cafepos.catalog;
+package com.cafepos.decorator;
 
 import com.cafepos.common.Money;
 

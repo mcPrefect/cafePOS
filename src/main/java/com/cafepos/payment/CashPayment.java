@@ -1,6 +1,6 @@
-package com.cafepos.catalog.payment;
+package com.cafepos.payment;
 
-import com.cafepos.domain.Order;
+import com.cafepos.order.Order;
 
 public final class CashPayment implements PaymentStrategy {
     @Override

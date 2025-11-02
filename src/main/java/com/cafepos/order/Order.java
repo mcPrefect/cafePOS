@@ -1,10 +1,12 @@
-package com.cafepos.domain;
+package com.cafepos.order;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import com.cafepos.catalog.payment.PaymentStrategy;
 import com.cafepos.common.Money;
+import com.cafepos.domain.OrderObserver;
+import com.cafepos.domain.OrderPublisher;
+import com.cafepos.payment.PaymentStrategy;
 
 public final class Order implements OrderPublisher{
     private final long id;

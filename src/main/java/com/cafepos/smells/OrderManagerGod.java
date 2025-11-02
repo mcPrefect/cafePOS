@@ -16,7 +16,7 @@ public class OrderManagerGod {
 
         Money unitPrice;
         try {
-            unitPrice = (product instanceof com.cafepos.catalog.Priced p) ? p.price() : product.basePrice();
+            unitPrice = (product instanceof com.cafepos.decorator.Priced p) ? p.price() : product.basePrice();
         } catch (Exception e) {
             unitPrice = product.basePrice();
         }

@@ -1,10 +1,8 @@
 package com.cafepos.checkout;
 
-import com.cafepos.common.Money;
 import com.cafepos.catalog.Product;
+import com.cafepos.common.Money;
 import com.cafepos.factory.ProductFactory;
-import com.cafepos.pricing.PricingService;
-import com.cafepos.pricing.ReceiptPrinter;
 
 public final class CheckoutService {
     private final ProductFactory factory;
@@ -22,7 +20,7 @@ public final class CheckoutService {
     public String checkout(String recipe, int qty) {
         Product product = factory.create(recipe);
         if (qty <= 0) qty = 1;
-        Money unit = (product instanceof com.cafepos.catalog.Priced p) ? p.price() : product.basePrice();
+        Money unit = (product instanceof com.cafepos.decorator.Priced p) ? p.price() : product.basePrice();
         Money subtotal = unit.multiply(qty);
         var result = pricing.price(subtotal);
 

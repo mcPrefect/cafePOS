@@ -5,15 +5,15 @@ import java.util.Scanner;
 import com.cafepos.catalog.Catalog;
 import com.cafepos.catalog.InMemoryCatalog;
 import com.cafepos.catalog.SimpleProduct;
-import com.cafepos.catalog.payment.CardPayment;
-import com.cafepos.catalog.payment.CashPayment;
 import com.cafepos.common.Money;
-import com.cafepos.domain.LineItem;
-import com.cafepos.domain.Order;
-import com.cafepos.domain.OrderIds;
 import com.cafepos.observer.CustomerNotifier;
 import com.cafepos.observer.DeliveryDesk;
 import com.cafepos.observer.KitchenDisplay;
+import com.cafepos.order.LineItem;
+import com.cafepos.order.Order;
+import com.cafepos.order.OrderIds;
+import com.cafepos.payment.CardPayment;
+import com.cafepos.payment.CashPayment;
 
 public final class Week4DemoInteractive {
     public static void main(String[] args) {

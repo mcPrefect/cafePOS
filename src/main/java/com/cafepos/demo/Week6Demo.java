@@ -1,8 +1,11 @@
 package com.cafepos.demo;
 
-import com.cafepos.factory.ProductFactory;
-import com.cafepos.pricing.*;
 import com.cafepos.checkout.CheckoutService;
+import com.cafepos.checkout.FixedRateTaxPolicy;
+import com.cafepos.checkout.LoyaltyPercentDiscount;
+import com.cafepos.checkout.PricingService;
+import com.cafepos.checkout.ReceiptPrinter;
+import com.cafepos.factory.ProductFactory;
 import com.cafepos.smells.OrderManagerGod;
 
 public final class Week6Demo {

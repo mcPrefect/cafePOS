@@ -1,8 +1,8 @@
 package com.cafepos.observer;
 
-import com.cafepos.domain.LineItem;
-import com.cafepos.domain.Order;
 import com.cafepos.domain.OrderObserver;
+import com.cafepos.order.LineItem;
+import com.cafepos.order.Order;
 
 public final class KitchenDisplay implements OrderObserver {
     @Override

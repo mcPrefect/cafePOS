@@ -1,6 +1,5 @@
 package com.cafepos.decorator;
 
-import com.cafepos.catalog.Priced;
 import com.cafepos.catalog.Product;
 import com.cafepos.common.Money;
 

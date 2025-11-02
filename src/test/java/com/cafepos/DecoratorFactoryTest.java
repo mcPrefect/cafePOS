@@ -4,16 +4,16 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
 
-import com.cafepos.catalog.Priced;
 import com.cafepos.catalog.Product;
 import com.cafepos.catalog.SimpleProduct;
 import com.cafepos.common.Money;
 import com.cafepos.decorator.ExtraShot;
 import com.cafepos.decorator.OatMilk;
+import com.cafepos.decorator.Priced;
 import com.cafepos.decorator.SizeLarge;
-import com.cafepos.domain.LineItem;
-import com.cafepos.domain.Order; // ← ADD THIS IMPORT
 import com.cafepos.factory.ProductFactory;
+import com.cafepos.order.LineItem;
+import com.cafepos.order.Order;
 
 public class DecoratorFactoryTest {
 

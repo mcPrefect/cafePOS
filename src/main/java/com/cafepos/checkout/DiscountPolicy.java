@@ -1,4 +1,4 @@
-package com.cafepos.pricing;
+package com.cafepos.checkout;
 
 import com.cafepos.common.Money;
 
