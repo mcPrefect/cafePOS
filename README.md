@@ -1,3 +1,5 @@
+![Architecture Diagram](ArchDiagram.png)
+
 ## Architectural Trade-offs: Layering vs Partitioning
 
 ### Layered Monolith Approach
