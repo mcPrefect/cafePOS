@@ -4,8 +4,8 @@ import com.cafepos.command.AddItemCommand;
 import com.cafepos.command.OrderService;
 import com.cafepos.command.PayOrderCommand;
 import com.cafepos.command.PosRemote;
-import com.cafepos.order.Order;
-import com.cafepos.order.OrderIds;
+import com.cafepos.domain.Order;
+import com.cafepos.domain.OrderIds;
 import com.cafepos.payment.CardPayment;
 
 public final class Week8Demo_Commands {

@@ -7,8 +7,8 @@ import com.cafepos.command.AddItemCommand;
 import com.cafepos.command.Command;
 import com.cafepos.command.OrderService;
 import com.cafepos.command.PosRemote;
-import com.cafepos.order.Order;
-import com.cafepos.order.OrderIds;
+import com.cafepos.domain.Order;
+import com.cafepos.domain.OrderIds;
 
 class CommandPatternTest {
     

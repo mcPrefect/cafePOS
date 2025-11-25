@@ -1,10 +1,10 @@
 package com.cafepos.demo;
 
 import com.cafepos.catalog.Product;
+import com.cafepos.domain.LineItem;
+import com.cafepos.domain.Order;
+import com.cafepos.domain.OrderIds;
 import com.cafepos.factory.ProductFactory;
-import com.cafepos.order.LineItem;
-import com.cafepos.order.Order;
-import com.cafepos.order.OrderIds;
 
 public final class Week5Demo {
     public static void main(String[] args) {

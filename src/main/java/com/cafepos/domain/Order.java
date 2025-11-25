@@ -1,11 +1,9 @@
-package com.cafepos.order;
+package com.cafepos.domain;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import com.cafepos.common.Money;
-import com.cafepos.domain.OrderObserver;
-import com.cafepos.domain.OrderPublisher;
 import com.cafepos.payment.PaymentStrategy;
 
 public final class Order implements OrderPublisher{
@@ -22,7 +20,7 @@ public final class Order implements OrderPublisher{
     }
 
     public List<LineItem> items() {
-        return items; 
+        return List.copyOf(items); // Defensive copy - callers can't modify internal state
     }
 
     public void addItem(LineItem li) {
@@ -82,5 +80,11 @@ public final class Order implements OrderPublisher{
 
     public void markReady() {
         notifyObservers("ready");
+    }
+
+    public void removeLastItem() {
+        if (!items.isEmpty()) {
+            items.remove(items.size() - 1);
+        }
     }
 }
