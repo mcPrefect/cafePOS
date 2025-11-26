@@ -1,5 +1,0 @@
-Order #1001
-Items: 2
-Subtotal: 8.50
-Tax (10%): 0.85
-Total: 9.35

@@ -1,4 +1,0 @@
-Order #1001 Total: 9.35
-[Cash] Customer paid 9.35 EUR
-Order #1002 Total: 9.35
-[Card] Customer paid 9.35 EUR with card ****1234
