@@ -1,23 +1,35 @@
 package com.cafepos.demo;
 
+import java.math.BigDecimal;
 import java.util.Scanner;
 
 import com.cafepos.app.CheckoutService;
 import com.cafepos.app.events.EventBus;
 import com.cafepos.app.events.OrderCreated;
 import com.cafepos.app.events.OrderPaid;
+import com.cafepos.catalog.Catalog;
+import com.cafepos.catalog.InMemoryCatalog;
+import com.cafepos.catalog.Product;
+import com.cafepos.catalog.SimpleProduct;
+import com.cafepos.checkout.PricingService;
 import com.cafepos.command.AddItemCommand;
 import com.cafepos.command.Command;
 import com.cafepos.command.OrderService;
 import com.cafepos.command.PayOrderCommand;
 import com.cafepos.command.PosRemote;
 import com.cafepos.common.Money;
+import com.cafepos.decorator.ExtraShot;
+import com.cafepos.decorator.OatMilk;
+import com.cafepos.decorator.SizeLarge;
+import com.cafepos.decorator.Syrup;
 import com.cafepos.domain.LineItem;
 import com.cafepos.domain.Order;
 import com.cafepos.domain.OrderIds;
 import com.cafepos.domain.OrderRepository;
-import com.cafepos.checkout.PricingService;
 import com.cafepos.infra.Wiring;
+import com.cafepos.menu.Menu;
+import com.cafepos.menu.MenuComponent;
+import com.cafepos.menu.MenuItem;
 import com.cafepos.observer.CustomerNotifier;
 import com.cafepos.observer.DeliveryDesk;
 import com.cafepos.observer.KitchenDisplay;
@@ -25,19 +37,40 @@ import com.cafepos.payment.CardPayment;
 import com.cafepos.payment.CashPayment;
 import com.cafepos.payment.PaymentStrategy;
 import com.cafepos.payment.WalletPayment;
+import com.cafepos.printing.LegacyPrinterAdapter;
+import com.cafepos.printing.Printer;
 import com.cafepos.state.OrderFSM;
 import com.cafepos.ui.ConsoleView;
+import com.cafepos.ui.OrderController;
+
+import vendor.legacy.LegacyThermalPrinter;
 
 public final class LayeredInteractiveDemo {
 
+    // Infrastructure (Wiring DI)
     private static Wiring.Components components;
     private static OrderRepository orderRepo;
     private static PricingService pricingService;
     private static CheckoutService checkoutService;
+
+    // EventBus (Pub-Sub)
     private static EventBus eventBus;
+
+    // MVC - View and Controller
     private static ConsoleView view;
-    private static Scanner scanner;
+    private static OrderController controller;
+
+    // Command Pattern
     private static PosRemote remote;
+
+    // Adapter Pattern
+    private static Printer receiptPrinter;
+
+    // Composite Pattern (Menu tree)
+    private static Menu cafeMenu;
+
+    private static Scanner scanner;
+    private static Catalog catalog;
 
     private static final int SLOT_ADD_ITEM = 0;
     private static final int SLOT_PAY = 1;
@@ -50,22 +83,105 @@ public final class LayeredInteractiveDemo {
     }
 
     private static void initializeSystem() {
+        // Wiring (DI Container)
         components = Wiring.createDefault();
         orderRepo = components.repo();
         pricingService = components.pricing();
         checkoutService = components.checkout();
 
+        // EventBus setup
         eventBus = new EventBus();
+
+        // MVC - View
+        view = new ConsoleView();
+
+        // Subscribe to events (EventBus pattern)
         eventBus.on(OrderCreated.class, e ->
             view.print("[EventBus] OrderCreated: Order #" + e.orderId()));
         eventBus.on(OrderPaid.class, e ->
             view.print("[EventBus] OrderPaid: Order #" + e.orderId()));
 
-        view = new ConsoleView();
         scanner = new Scanner(System.in);
+
+        // Command Pattern - PosRemote
         remote = new PosRemote(5);
 
-        view.print("\n=== CAFE POS (Layered Architecture) ===\n");
+        // MVC - Controller
+        controller = new OrderController(orderRepo, checkoutService);
+
+        // Adapter Pattern - wrap legacy printer
+        receiptPrinter = new LegacyPrinterAdapter(new LegacyThermalPrinter());
+
+        // Composite Pattern - build menu tree
+        setupMenuComposite();
+
+        setupCatalog();
+
+        view.print("\n╔════════════════════════════════════════╗");
+        view.print("║                                        ║");
+        view.print("║         CAFÉ POS SYSTEM                ║");
+        view.print("║                                        ║");
+        view.print("╚════════════════════════════════════════╝\n");
+    }
+
+    private static void setupMenuComposite() {
+        // Composite Pattern: Menu tree with submenus
+        cafeMenu = new Menu("Cafe Menu");
+
+        Menu drinks = new Menu("Hot Drinks");
+        drinks.add(new MenuItem("Espresso", BigDecimal.valueOf(2.50), true));
+        drinks.add(new MenuItem("Latte", BigDecimal.valueOf(3.20), true));
+        drinks.add(new MenuItem("Cappuccino", BigDecimal.valueOf(3.00), true));
+        drinks.add(new MenuItem("Americano", BigDecimal.valueOf(2.80), true));
+
+        Menu food = new Menu("Food");
+        food.add(new MenuItem("Chocolate Cookie", BigDecimal.valueOf(3.50), true));
+        food.add(new MenuItem("Croissant", BigDecimal.valueOf(2.75), true));
+        food.add(new MenuItem("Muffin", BigDecimal.valueOf(3.00), true));
+
+        Menu addons = new Menu("Customizations");
+        addons.add(new MenuItem("Extra Shot", BigDecimal.valueOf(0.80), true));
+        addons.add(new MenuItem("Oat Milk", BigDecimal.valueOf(0.50), true));
+        addons.add(new MenuItem("Syrup", BigDecimal.valueOf(0.40), true));
+        addons.add(new MenuItem("Large Size", BigDecimal.valueOf(0.70), true));
+
+        cafeMenu.add(drinks);
+        cafeMenu.add(food);
+        cafeMenu.add(addons);
+    }
+
+    private static void setupCatalog() {
+        catalog = new InMemoryCatalog();
+        catalog.add(new SimpleProduct("P-ESP", "Espresso", Money.of(2.50)));
+        catalog.add(new SimpleProduct("P-LAT", "Latte", Money.of(3.20)));
+        catalog.add(new SimpleProduct("P-CAP", "Cappuccino", Money.of(3.00)));
+        catalog.add(new SimpleProduct("P-AME", "Americano", Money.of(2.80)));
+        catalog.add(new SimpleProduct("P-CCK", "Chocolate Cookie", Money.of(3.50)));
+        catalog.add(new SimpleProduct("P-CRO", "Croissant", Money.of(2.75)));
+        catalog.add(new SimpleProduct("P-MUF", "Muffin", Money.of(3.00)));
+    }
+
+    private static void showMenuComposite() {
+        // Composite + Iterator: traverse menu tree
+        view.print("\n╔═══════════════ MENU ══════════════════════╗");
+        view.print("║  (Using Composite + Iterator patterns)    ║");
+        view.print("╚═══════════════════════════════════════════╝\n");
+
+        // Iterator Pattern: iterate through composite tree
+        for (MenuComponent component : cafeMenu) {
+            if (component instanceof MenuItem item) {
+                view.print("    " + item.name() + " ... " + item.price());
+            } else if (component instanceof Menu menu) {
+                view.print("\n  " + menu.name().toUpperCase());
+            }
+        }
+
+        view.print("\n--- Vegetarian items only (filtered via Iterator) ---");
+        cafeMenu.vegetarianItems().forEach(item ->
+            view.print("  (v) " + item.name()));
+
+        view.print("\nPress Enter to continue...");
+        scanner.nextLine();
     }
 
     private static void runMainLoop() {
@@ -73,16 +189,18 @@ public final class LayeredInteractiveDemo {
         while (running) {
             view.print("\n╔════════════ MAIN MENU ═════════════╗");
             view.print("║ 1. New Order                       ║");
-            view.print("║ 2. Exit System                     ║");
+            view.print("║ 2. View Menu (Composite/Iterator)  ║");
+            view.print("║ 3. Exit System                     ║");
             view.print("╚════════════════════════════════════╝");
             System.out.print("Choose option: ");
 
             int choice = getIntInput();
             switch (choice) {
                 case 1 -> processNewOrder();
-                case 2 -> {
+                case 2 -> showMenuComposite();
+                case 3 -> {
                     running = false;
-                    view.print("\n✓ Thank you for using Café POS! Goodbye!\n");
+                    view.print("\n✓ Thank you for using Café POS! Goodbye! ☕\n");
                 }
                 default -> view.print("❌ Invalid option!");
             }
@@ -94,22 +212,25 @@ public final class LayeredInteractiveDemo {
         Order order = new Order(orderId);
         orderRepo.save(order);
 
+        // State Pattern: OrderFSM
         OrderFSM fsm = new OrderFSM();
 
+        // Observer Pattern
         order.register(new KitchenDisplay());
         order.register(new DeliveryDesk());
         order.register(new CustomerNotifier());
 
         OrderService orderService = new OrderService(order);
 
+        // EventBus: emit event
         eventBus.emit(new OrderCreated(orderId));
 
-        view.print("\nCreated Order #" + orderId);
-        view.print("✓ Observers registered");
-        view.print("[FSM] State: " + fsm.status() + "\n");
+        view.print("\n Created Order #" + orderId);
+        view.print("[FSM] State: " + fsm.status());
 
         boolean orderComplete = false;
         while (!orderComplete) {
+            // State Pattern: behavior depends on current state
             orderComplete = switch (fsm.status()) {
                 case "NEW" -> handleNewState(order, orderService, fsm);
                 case "PREPARING" -> handlePreparingState(order, fsm);
@@ -123,63 +244,152 @@ public final class LayeredInteractiveDemo {
     }
 
     private static boolean handleNewState(Order order, OrderService orderService, OrderFSM fsm) {
-        view.print("\n╔═══════════ ORDER #" + order.id() + " - TAKING ORDER ════════════╗");
+        view.print("\n╔═════════════ ORDER #" + order.id() + " - TAKING ORDER ══════════════╗");
         view.print("║                                                       ║");
-        view.print("║  Recipe codes: ESP, LAT, CAP, AME                     ║");
-        view.print("║  Add-ons: SHOT, OAT, SYP, L   (e.g. LAT+L+SHOT)       ║");
+        view.print("║  DRINKS                      FOOD                     ║");
+        view.print("║  1. Espresso        2.50     5. Chocolate Cookie 3.50 ║");
+        view.print("║  2. Latte           3.20     6. Croissant        2.75 ║");
+        view.print("║  3. Cappuccino      3.00     7. Muffin           3.00 ║");
+        view.print("║  4. Americano       2.80                              ║");
         view.print("║                                                       ║");
-        view.print("║  1. Add Item          4. Proceed to Payment           ║");
-        view.print("║  2. Undo Last Item    5. Cancel Order                 ║");
-        view.print("║  3. View Order                                        ║");
+        view.print("║  8. Use Recipe Code (Command Pattern)                 ║");
+        view.print("║  9. View Current Order                                ║");
+        view.print("║ 10. Undo Last Item (Command Pattern)                  ║");
+        view.print("║ 11. Proceed to Payment                                ║");
+        view.print("║ 12. Cancel Order                                      ║");
         view.print("╚═══════════════════════════════════════════════════════╝");
         System.out.print("Choose option: ");
 
         int choice = getIntInput();
 
-        switch (choice) {
-            case 1 -> {
-                System.out.print("Enter recipe: ");
-                String recipe = scanner.nextLine().trim().toUpperCase();
-                System.out.print("Quantity: ");
-                int qty = getIntInput();
-
-                try {
-                    Command addCmd = new AddItemCommand(orderService, recipe, qty);
-                    remote.setSlot(SLOT_ADD_ITEM, addCmd);
-                    remote.press(SLOT_ADD_ITEM);
+        try {
+            switch (choice) {
+                case 1 -> addCustomizedDrink(order, "P-ESP", "Espresso", Money.of(2.50));
+                case 2 -> addCustomizedDrink(order, "P-LAT", "Latte", Money.of(3.20));
+                case 3 -> addCustomizedDrink(order, "P-CAP", "Cappuccino", Money.of(3.00));
+                case 4 -> addCustomizedDrink(order, "P-AME", "Americano", Money.of(2.80));
+                case 5 -> {
+                    order.addItem(new LineItem(catalog.findById("P-CCK").orElseThrow(), 1));
                     orderRepo.save(order);
-                } catch (Exception e) {
-                    view.print("❌ Error: " + e.getMessage());
+                    view.print("✓ Added Chocolate Cookie");
                 }
-            }
-            case 2 -> {
-                remote.undo();
-                orderRepo.save(order);
-            }
-            case 3 -> showOrderSummary(order);
-            case 4 -> {
-                if (order.items().isEmpty()) {
-                    view.print("❌ Cannot proceed - order is empty!");
-                    return false;
+                case 6 -> {
+                    order.addItem(new LineItem(catalog.findById("P-CRO").orElseThrow(), 1));
+                    orderRepo.save(order);
+                    view.print("✓ Added Croissant");
                 }
-                return handlePayment(order, orderService, fsm);
+                case 7 -> {
+                    order.addItem(new LineItem(catalog.findById("P-MUF").orElseThrow(), 1));
+                    orderRepo.save(order);
+                    view.print("✓ Added Muffin");
+                }
+                case 8 -> addFromRecipe(order, orderService);
+                case 9 -> showOrderSummary(order);
+                case 10 -> {
+                    // Command Pattern: undo
+                    remote.undo();
+                    orderRepo.save(order);
+                }
+                case 11 -> {
+                    if (order.items().isEmpty()) {
+                        view.print("❌ Cannot proceed - order is empty!");
+                        return false;
+                    }
+                    return handlePayment(order, orderService, fsm);
+                }
+                case 12 -> {
+                    System.out.print("⚠️  Are you sure you want to cancel? (y/n): ");
+                    String confirm = scanner.nextLine().trim().toLowerCase();
+                    if (confirm.equals("y")) {
+                        fsm.cancel();
+                        view.print("❌ Order cancelled");
+                        return true;
+                    }
+                }
+                default -> view.print("❌ Invalid option!");
             }
-            case 5 -> {
-                fsm.cancel();
-                view.print("❌ Order cancelled");
-                return true;
-            }
-            default -> view.print("❌ Invalid option!");
+        } catch (Exception e) {
+            view.print("❌ Error: " + e.getMessage());
         }
 
         return false;
     }
 
+    private static void addCustomizedDrink(Order order, String id, String name, Money basePrice) {
+        // Decorator Pattern: wrap product with add-ons
+        Product drink = new SimpleProduct(id, name, basePrice);
+
+        view.print("\n--- Customize " + name + " (Decorator Pattern) ---");
+        System.out.print("Add extras? (y/n): ");
+        String response = scanner.nextLine().trim().toLowerCase();
+
+        if (response.equals("y")) {
+            view.print("\n1. Extra Shot (+0.80)");
+            view.print("2. Oat Milk (+0.50)");
+            view.print("3. Syrup (+0.40)");
+            view.print("4. Large Size (+0.70)");
+            view.print("0. Done customizing");
+
+            boolean customizing = true;
+            while (customizing) {
+                System.out.print("Add option (0 when done): ");
+                int option = getIntInput();
+
+                switch (option) {
+                    case 1 -> {
+                        drink = new ExtraShot(drink);
+                        view.print("  ✓ Added Extra Shot");
+                    }
+                    case 2 -> {
+                        drink = new OatMilk(drink);
+                        view.print("  ✓ Added Oat Milk");
+                    }
+                    case 3 -> {
+                        drink = new Syrup(drink);
+                        view.print("  ✓ Added Syrup");
+                    }
+                    case 4 -> {
+                        drink = new SizeLarge(drink);
+                        view.print("  ✓ Made Large");
+                    }
+                    case 0 -> customizing = false;
+                    default -> view.print("  ❌ Invalid option");
+                }
+            }
+        }
+
+        order.addItem(new LineItem(drink, 1));
+        view.print("✓ Added: " + drink.name());
+    }
+
+    private static void addFromRecipe(Order order, OrderService orderService) {
+        view.print("\n--- Recipe Builder (Command Pattern) ---");
+        view.print("Base codes: ESP, LAT, CAP, AME");
+        view.print("Add-ons: SHOT, OAT, SYP, L");
+        view.print("Example: ESP+SHOT+OAT+L");
+        System.out.print("Enter recipe: ");
+
+        String recipe = scanner.nextLine().trim().toUpperCase();
+        System.out.print("Quantity: ");
+        int qty = getIntInput();
+
+        try {
+            // Command Pattern: create and execute command
+            Command addCmd = new AddItemCommand(orderService, recipe, qty);
+            remote.setSlot(SLOT_ADD_ITEM, addCmd);
+            remote.press(SLOT_ADD_ITEM);
+            orderRepo.save(order);
+        } catch (Exception e) {
+            view.print("❌ Invalid recipe: " + e.getMessage());
+        }
+    }
+
     private static boolean handlePayment(Order order, OrderService orderService, OrderFSM fsm) {
         showOrderSummary(order);
 
+        // Strategy Pattern: PricingService with DiscountPolicy/TaxPolicy
         var pricing = pricingService.price(order.subtotal());
-        view.print("\n--- Pricing ---");
+        view.print("\n--- Pricing (Strategy Pattern) ---");
         view.print("Subtotal:  " + pricing.subtotal());
         if (pricing.discount().compareTo(Money.zero()) > 0) {
             view.print("Discount:  -" + pricing.discount() + " (5% Loyalty)");
@@ -191,54 +401,131 @@ public final class LayeredInteractiveDemo {
         view.print("║ 1. Pay with Cash                   ║");
         view.print("║ 2. Pay with Card                   ║");
         view.print("║ 3. Pay with Digital Wallet         ║");
-        view.print("║ 4. Back to Order                   ║");
+        view.print("║ 4. Back to Order (add more items)  ║");
+        view.print("║ 5. Cancel Order                    ║");
         view.print("╚════════════════════════════════════╝");
-        System.out.print("Choose payment method: ");
+        System.out.print("Choose payment method (Strategy Pattern): ");
 
         int choice = getIntInput();
-        PaymentStrategy strategy = switch (choice) {
-            case 1 -> new CashPayment();
-            case 2 -> {
-                System.out.print("Enter card number: ");
-                yield new CardPayment(scanner.nextLine().trim());
-            }
-            case 3 -> {
-                System.out.print("Enter wallet ID: ");
-                yield new WalletPayment(scanner.nextLine().trim());
-            }
-            default -> null;
-        };
-
-        if (strategy == null) {
-            if (choice != 4) view.print("❌ Invalid option!");
-            return false;
-        }
 
         try {
-            Command payCmd = new PayOrderCommand(orderService, strategy, TAX_PERCENT);
-            remote.setSlot(SLOT_PAY, payCmd);
-            remote.press(SLOT_PAY);
+            switch (choice) {
+                case 1 -> {
+                    return processCashPayment(order, orderService, fsm);
+                }
+                case 2 -> {
+                    System.out.print("Enter card number: ");
+                    String cardNum = scanner.nextLine().trim();
 
-            fsm.pay();
-            view.print("✓ Payment successful!");
-            view.print("[FSM] State: " + fsm.status());
+                    if (cardNum.length() != 16 || !cardNum.matches("\\d+")) {
+                        view.print("❌ Invalid card number format!");
+                        return false;
+                    }
 
-            eventBus.emit(new OrderPaid(order.id()));
-            orderRepo.save(order);
-            return false;
+                    view.print("\n💳 Processing card payment...");
+                    processPayment(order, orderService, fsm, new CardPayment("****" + cardNum));
+                    return false;
+                }
+                case 3 -> {
+                    System.out.print("Enter wallet ID: ");
+                    String walletId = scanner.nextLine().trim();
+
+                    if (walletId.isEmpty()) {
+                        view.print("❌ Wallet ID cannot be empty!");
+                        return false;
+                    }
+
+                    view.print("\n📱 Processing wallet payment...");
+                    processPayment(order, orderService, fsm, new WalletPayment(walletId));
+                    return false;
+                }
+                case 4 -> {
+                    return false;
+                }
+                case 5 -> {
+                    System.out.print("⚠️  Are you sure you want to cancel? (y/n): ");
+                    String confirm = scanner.nextLine().trim().toLowerCase();
+                    if (confirm.equals("y")) {
+                        fsm.cancel();
+                        view.print("❌ Order cancelled");
+                        return true;
+                    }
+                    return false;
+                }
+                default -> {
+                    view.print("❌ Invalid option!");
+                    return false;
+                }
+            }
         } catch (Exception e) {
             view.print("❌ Payment failed: " + e.getMessage());
             return false;
         }
     }
 
+    private static boolean processCashPayment(Order order, OrderService orderService, OrderFSM fsm) {
+        Money total = pricingService.price(order.subtotal()).total();
+
+        view.print("\n💵 Cash Payment");
+        view.print("   Total due: " + total + " EUR");
+
+        Money cashReceived = Money.zero();
+        boolean validAmount = false;
+
+        while (!validAmount) {
+            System.out.print("   Cash received: ");
+            try {
+                double amount = Double.parseDouble(scanner.nextLine().trim());
+                cashReceived = Money.of(amount);
+
+                if (cashReceived.compareTo(total) < 0) {
+                    Money shortfall = total.subtract(cashReceived);
+                    view.print("   ❌ Insufficient! Still need: " + shortfall + " EUR");
+                } else {
+                    validAmount = true;
+                }
+            } catch (NumberFormatException e) {
+                view.print("   ❌ Invalid amount. Please enter a number.");
+            }
+        }
+
+        Money change = cashReceived.subtract(total);
+
+        view.print("\n   Cash received: " + cashReceived + " EUR");
+        if (change.compareTo(Money.zero()) > 0) {
+            view.print("   💰 Change due: " + change + " EUR");
+        } else {
+            view.print("   ✓ Exact amount - No change");
+        }
+
+        processPayment(order, orderService, fsm, new CashPayment());
+        return false;
+    }
+
+    private static void processPayment(Order order, OrderService orderService, OrderFSM fsm, PaymentStrategy strategy) {
+        // Command Pattern: payment command
+        Command payCmd = new PayOrderCommand(orderService, strategy, TAX_PERCENT);
+        remote.setSlot(SLOT_PAY, payCmd);
+        remote.press(SLOT_PAY);
+
+        // State Pattern: transition
+        fsm.pay();
+        view.print("✓ Payment successful!");
+        view.print("[FSM] State: " + fsm.status());
+
+        // EventBus: emit event
+        eventBus.emit(new OrderPaid(order.id()));
+        orderRepo.save(order);
+    }
+
     private static boolean handlePreparingState(Order order, OrderFSM fsm) {
         view.print("\n╔════════════ FULFILLMENT ═══════════╗");
-        view.print("║ Order #" + order.id() + " - " + fsm.status());
+        view.print("║ Order #" + order.id() + " has been paid          ║");
         view.print("║                                    ║");
-        view.print("║ 1. Mark Order Ready                ║");
+        view.print("║ 1. Mark Order Ready (for pickup)   ║");
         view.print("║ 2. View Receipt                    ║");
-        view.print("║ 3. Cancel Order                    ║");
+        view.print("║ 3. Print Receipt (Adapter Pattern) ║");
+        view.print("║ 4. Complete Order                  ║");
         view.print("╚════════════════════════════════════╝");
         System.out.print("Choose option: ");
 
@@ -246,15 +533,23 @@ public final class LayeredInteractiveDemo {
 
         switch (choice) {
             case 1 -> {
+                view.print("\n📦 Marking order ready...");
                 fsm.markReady();
                 order.markReady();
-                view.print("✓ Order ready for pickup!");
+                view.print("✓ Order ready for pickup/delivery!");
                 view.print("[FSM] State: " + fsm.status());
             }
             case 2 -> showReceipt(order);
             case 3 -> {
-                fsm.cancel();
-                view.print("❌ Order cancelled");
+                // Adapter Pattern: use legacy printer
+                String receipt = checkoutService.checkout(order.id(), TAX_PERCENT);
+                view.print("\n[Adapter] Sending to legacy thermal printer...");
+                receiptPrinter.print(receipt);
+            }
+            case 4 -> {
+                fsm.deliver();
+                view.print("\n✓ Order #" + order.id() + " completed!");
+                view.print("Thank you for your business! ☕");
                 return true;
             }
             default -> view.print("❌ Invalid option!");
@@ -269,6 +564,7 @@ public final class LayeredInteractiveDemo {
         view.print("║                                    ║");
         view.print("║ 1. Deliver to Customer             ║");
         view.print("║ 2. View Receipt                    ║");
+        view.print("║ 3. Print Receipt (Adapter Pattern) ║");
         view.print("╚════════════════════════════════════╝");
         System.out.print("Choose option: ");
 
@@ -278,10 +574,17 @@ public final class LayeredInteractiveDemo {
             case 1 -> {
                 fsm.deliver();
                 view.print("\n✓ Order #" + order.id() + " delivered!");
+                view.print("Thank you for your business! ☕");
                 view.print("[FSM] State: " + fsm.status());
                 return true;
             }
             case 2 -> showReceipt(order);
+            case 3 -> {
+                // Adapter Pattern
+                String receipt = checkoutService.checkout(order.id(), TAX_PERCENT);
+                view.print("\n[Adapter] Sending to legacy thermal printer...");
+                receiptPrinter.print(receipt);
+            }
             default -> view.print("❌ Invalid option!");
         }
 
@@ -296,14 +599,18 @@ public final class LayeredInteractiveDemo {
         if (order.items().isEmpty()) {
             view.print("  (No items yet)");
         } else {
+            int itemNum = 1;
             for (LineItem li : order.items()) {
-                view.print(String.format("  %-30s x%d", li.product().name(), li.quantity()));
-                view.print(String.format("  %40s", li.lineTotal() + " EUR"));
+                view.print(String.format("  %d. %-27s x%d", itemNum++, li.product().name(), li.quantity()));
+                view.print(String.format("     %37s", li.lineTotal() + " EUR"));
             }
         }
 
         view.print("  ─────────────────────────────────────");
         view.print("  Subtotal: " + order.subtotal() + " EUR");
+        view.print("  Tax (10%): " + order.taxAtPercent(10) + " EUR");
+        view.print("  ─────────────────────────────────────");
+        view.print("  TOTAL: " + order.totalWithTax(10) + " EUR");
         view.print("╚════════════════════════════════════════╝");
     }
 
@@ -311,10 +618,21 @@ public final class LayeredInteractiveDemo {
         view.print("\n╔════════════════════════════════════════╗");
         view.print("║            CAFÉ RECEIPT                ║");
         view.print("╠════════════════════════════════════════╣");
-        view.print(checkoutService.checkout(order.id(), TAX_PERCENT));
+        view.print("  Order #" + order.id());
+        view.print("  Date: " + java.time.LocalDateTime.now().format(
+            java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")));
+        view.print("  ────────────────────────────────────");
+
+        // MVC: Controller delegates to CheckoutService
+        view.print(controller.checkout(order.id(), TAX_PERCENT));
+
         view.print("╠════════════════════════════════════════╣");
-        view.print("║   Thank you for your order!            ║");
+        view.print("║   Thank you for your order! ☕         ║");
+        view.print("║   Please come again!                   ║");
         view.print("╚════════════════════════════════════════╝");
+
+        view.print("\nPress Enter to continue...");
+        scanner.nextLine();
     }
 
     private static int getIntInput() {
