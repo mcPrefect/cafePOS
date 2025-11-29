@@ -45,7 +45,7 @@ import com.cafepos.ui.OrderController;
 
 import vendor.legacy.LegacyThermalPrinter;
 
-public final class LayeredInteractiveDemo {
+public final class InteractiveDemo {
 
     // Infrastructure (Wiring DI)
     private static Wiring.Components components;

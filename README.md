@@ -1,4 +1,10 @@
-![Architecture Diagram](ArchDiagram.png)
+# Café POS System
+
+## Architecture
+
+![Architecture Diagram](docs/ArchDiagram.png)
+
+![UML Diagram](docs/uml.svg)
 
 ## Architectural Trade-offs: Layering vs Partitioning
 
@@ -29,3 +35,37 @@ Currently we do direct method calls (e.g., `controller.checkout(orderId);`) whic
 - **API Gateway** for frontend to access multiple services through a single endpoint
 
 Our current EventBus demonstrates the publish-subscribe pattern that would scale to a message broker in a distributed system.
+
+## Build & Run
+
+```bash
+# Compile
+mvn compile
+
+# Run tests
+mvn test
+
+# Run the interactive demo
+mvn compile exec:java -Dexec.mainClass="com.cafepos.demo.InteractiveDemo"
+```
+
+## Project Structure
+
+```
+src/main/java/com/cafepos/
+├── app/            # Application layer (use cases, services)
+├── domain/         # Domain layer (Order, LineItem, repositories)
+├── infra/          # Infrastructure layer (persistence, wiring)
+├── ui/             # Presentation layer (controller, view)
+├── catalog/        # Product catalog
+├── checkout/       # Pricing and discount policies
+├── command/        # Command pattern implementation
+├── decorator/      # Product decorators (extras, size)
+├── factory/        # Product factory
+├── menu/           # Composite menu structure
+├── observer/       # Order observers (kitchen, delivery)
+├── payment/        # Payment strategies
+├── printing/       # Printer adapter
+├── state/          # Order state machine
+└── demo/           # Demo applications
+```
