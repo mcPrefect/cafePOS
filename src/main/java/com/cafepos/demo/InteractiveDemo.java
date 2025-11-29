@@ -9,7 +9,6 @@ import com.cafepos.app.events.OrderCreated;
 import com.cafepos.app.events.OrderPaid;
 import com.cafepos.catalog.Catalog;
 import com.cafepos.catalog.InMemoryCatalog;
-import com.cafepos.catalog.Product;
 import com.cafepos.catalog.SimpleProduct;
 import com.cafepos.checkout.PricingService;
 import com.cafepos.command.AddItemCommand;
@@ -18,10 +17,6 @@ import com.cafepos.command.OrderService;
 import com.cafepos.command.PayOrderCommand;
 import com.cafepos.command.PosRemote;
 import com.cafepos.common.Money;
-import com.cafepos.decorator.ExtraShot;
-import com.cafepos.decorator.OatMilk;
-import com.cafepos.decorator.SizeLarge;
-import com.cafepos.decorator.Syrup;
 import com.cafepos.domain.LineItem;
 import com.cafepos.domain.Order;
 import com.cafepos.domain.OrderIds;
@@ -121,7 +116,8 @@ public final class InteractiveDemo {
         view.print("║                                        ║");
         view.print("║         CAFÉ POS SYSTEM                ║");
         view.print("║                                        ║");
-        view.print("╚════════════════════════════════════════╝\n");
+        view.print("╚════════════════════════════════════════╝");
+        view.print("[MVC] View: ConsoleView, Controller: OrderController\n");
     }
 
     private static void setupMenuComposite() {
@@ -165,7 +161,9 @@ public final class InteractiveDemo {
         // Composite + Iterator: traverse menu tree
         view.print("\n╔═══════════════ MENU ══════════════════════╗");
         view.print("║  (Using Composite + Iterator patterns)    ║");
-        view.print("╚═══════════════════════════════════════════╝\n");
+        view.print("╚═══════════════════════════════════════════╝");
+        view.print("[Composite] Menu tree: Cafe Menu -> Hot Drinks, Food, Customizations");
+        view.print("[Iterator] Traversing menu tree using for-each loop\n");
 
         // Iterator Pattern: iterate through composite tree
         for (MenuComponent component : cafeMenu) {
@@ -177,7 +175,7 @@ public final class InteractiveDemo {
             }
         }
 
-        view.print("\n--- Vegetarian items only (filtered via Iterator) ---");
+        view.print("\n[Iterator] Filtering vegetarian items only:");
         cafeMenu.vegetarianItems().forEach(item ->
             view.print("  (v) " + item.name()));
 
@@ -216,7 +214,8 @@ public final class InteractiveDemo {
         // State Pattern: OrderFSM
         OrderFSM fsm = new OrderFSM();
 
-        // Observer Pattern
+        // Observer Pattern: register observers to receive order updates
+        view.print("[Observer] Registering KitchenDisplay, DeliveryDesk, CustomerNotifier");
         order.register(new KitchenDisplay());
         order.register(new DeliveryDesk());
         order.register(new CustomerNotifier());
@@ -265,25 +264,13 @@ public final class InteractiveDemo {
 
         try {
             switch (choice) {
-                case 1 -> addCustomizedDrink(order, "P-ESP", "Espresso", Money.of(2.50));
-                case 2 -> addCustomizedDrink(order, "P-LAT", "Latte", Money.of(3.20));
-                case 3 -> addCustomizedDrink(order, "P-CAP", "Cappuccino", Money.of(3.00));
-                case 4 -> addCustomizedDrink(order, "P-AME", "Americano", Money.of(2.80));
-                case 5 -> {
-                    order.addItem(new LineItem(catalog.findById("P-CCK").orElseThrow(), 1));
-                    orderRepo.save(order);
-                    view.print("✓ Added Chocolate Cookie");
-                }
-                case 6 -> {
-                    order.addItem(new LineItem(catalog.findById("P-CRO").orElseThrow(), 1));
-                    orderRepo.save(order);
-                    view.print("✓ Added Croissant");
-                }
-                case 7 -> {
-                    order.addItem(new LineItem(catalog.findById("P-MUF").orElseThrow(), 1));
-                    orderRepo.save(order);
-                    view.print("✓ Added Muffin");
-                }
+                case 1 -> addCustomizedDrink(order, orderService, "ESP", "Espresso");
+                case 2 -> addCustomizedDrink(order, orderService, "LAT", "Latte");
+                case 3 -> addCustomizedDrink(order, orderService, "CAP", "Cappuccino");
+                case 4 -> addCustomizedDrink(order, orderService, "AME", "Americano");
+                case 5 -> addItemViaCommand(order, orderService, "CCK", "Chocolate Cookie");
+                case 6 -> addItemViaCommand(order, orderService, "CRO", "Croissant");
+                case 7 -> addItemViaCommand(order, orderService, "MUF", "Muffin");
                 case 8 -> addFromRecipe(order, orderService);
                 case 9 -> showOrderSummary(order);
                 case 10 -> {
@@ -316,9 +303,18 @@ public final class InteractiveDemo {
         return false;
     }
 
-    private static void addCustomizedDrink(Order order, String id, String name, Money basePrice) {
-        // Decorator Pattern: wrap product with add-ons
-        Product drink = new SimpleProduct(id, name, basePrice);
+    private static void addItemViaCommand(Order order, OrderService orderService, String recipeCode, String displayName) {
+        // Command Pattern: create and execute command for simple items
+        Command addCmd = new AddItemCommand(orderService, recipeCode, 1);
+        remote.setSlot(SLOT_ADD_ITEM, addCmd);
+        remote.press(SLOT_ADD_ITEM);
+        orderRepo.save(order);
+        view.print("✓ Added " + displayName);
+    }
+
+    private static void addCustomizedDrink(Order order, OrderService orderService, String baseCode, String name) {
+        // Decorator Pattern: build recipe string with add-ons
+        StringBuilder recipe = new StringBuilder(baseCode);
 
         view.print("\n--- Customize " + name + " (Decorator Pattern) ---");
         System.out.print("Add extras? (y/n): ");
@@ -338,19 +334,19 @@ public final class InteractiveDemo {
 
                 switch (option) {
                     case 1 -> {
-                        drink = new ExtraShot(drink);
+                        recipe.append("+SHOT");
                         view.print("  ✓ Added Extra Shot");
                     }
                     case 2 -> {
-                        drink = new OatMilk(drink);
+                        recipe.append("+OAT");
                         view.print("  ✓ Added Oat Milk");
                     }
                     case 3 -> {
-                        drink = new Syrup(drink);
+                        recipe.append("+SYP");
                         view.print("  ✓ Added Syrup");
                     }
                     case 4 -> {
-                        drink = new SizeLarge(drink);
+                        recipe.append("+L");
                         view.print("  ✓ Made Large");
                     }
                     case 0 -> customizing = false;
@@ -359,15 +355,18 @@ public final class InteractiveDemo {
             }
         }
 
-        order.addItem(new LineItem(drink, 1));
-        view.print("✓ Added: " + drink.name());
+        // Command Pattern: use PosRemote to track command for undo
+        Command addCmd = new AddItemCommand(orderService, recipe.toString(), 1);
+        remote.setSlot(SLOT_ADD_ITEM, addCmd);
+        remote.press(SLOT_ADD_ITEM);
+        orderRepo.save(order);
     }
 
     private static void addFromRecipe(Order order, OrderService orderService) {
         view.print("\n--- Recipe Builder (Command Pattern) ---");
-        view.print("Base codes: ESP, LAT, CAP, AME");
+        view.print("Base codes: ESP, LAT, CAP, AME, CCK, CRO, MUF");
         view.print("Add-ons: SHOT, OAT, SYP, L");
-        view.print("Example: ESP+SHOT+OAT+L");
+        view.print("Example: LAT+SHOT+OAT+L");
         System.out.print("Enter recipe: ");
 
         String recipe = scanner.nextLine().trim().toUpperCase();
@@ -520,14 +519,13 @@ public final class InteractiveDemo {
     }
 
     private static boolean handlePreparingState(Order order, OrderFSM fsm) {
-        view.print("\n╔════════════ FULFILLMENT ═══════════╗");
-        view.print("║ Order #" + order.id() + " has been paid          ║");
-        view.print("║                                    ║");
-        view.print("║ 1. Mark Order Ready (for pickup)   ║");
-        view.print("║ 2. View Receipt                    ║");
-        view.print("║ 3. Print Receipt (Adapter Pattern) ║");
-        view.print("║ 4. Complete Order                  ║");
-        view.print("╚════════════════════════════════════╝");
+        view.print("\n╔════════════ PREPARING ORDER ═══════════╗");
+        view.print("║ Order #" + order.id() + " is being prepared       ║");
+        view.print("║                                        ║");
+        view.print("║ 1. Mark Order Ready (for pickup)       ║");
+        view.print("║ 2. View Receipt                        ║");
+        view.print("║ 3. Print Receipt (Adapter Pattern)     ║");
+        view.print("╚════════════════════════════════════════╝");
         System.out.print("Choose option: ");
 
         int choice = getIntInput();
@@ -546,12 +544,6 @@ public final class InteractiveDemo {
                 String receipt = checkoutService.checkout(order.id(), TAX_PERCENT);
                 view.print("\n[Adapter] Sending to legacy thermal printer...");
                 receiptPrinter.print(receipt);
-            }
-            case 4 -> {
-                fsm.deliver();
-                view.print("\n✓ Order #" + order.id() + " completed!");
-                view.print("Thank you for your business! ☕");
-                return true;
             }
             default -> view.print("❌ Invalid option!");
         }
@@ -625,6 +617,7 @@ public final class InteractiveDemo {
         view.print("  ────────────────────────────────────");
 
         // MVC: Controller delegates to CheckoutService
+        view.print("[MVC] Controller -> CheckoutService -> View");
         view.print(controller.checkout(order.id(), TAX_PERCENT));
 
         view.print("╠════════════════════════════════════════╣");
