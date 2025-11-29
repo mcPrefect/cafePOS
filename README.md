@@ -8,11 +8,50 @@
 
 ## Architectural Trade-offs: Layering vs Partitioning
 
-### Layered Monolith Approach
+### Context
+
+As our Café POS project grew through weeks 8-11 with the addition of Command, Adapter, Composite, Iterator, State, MVC, and EventBus patterns, we needed to make a decision on how to structure the system. The main question we faced was whether to keep everything as a layered monolith or partition into microservices from the start.
+
+### Alternatives We Considered
+
+We evaluated three different architectural approaches:
+
+**1. Layered Monolith**
+- Single deployable JAR with four clear layers (Presentation, Application, Domain, Infrastructure)
+- In-process method calls between components
+- Simple deployment model
+
+**2. Microservices Architecture**
+- Separate services for Orders, Payments, Notifications, Inventory, and Analytics
+- Each service deploys independently
+- Communication via REST APIs and message queues
+
+**3. Modular Monolith**
+- Single deployment unit with strict module boundaries
+- Enforced separation via build tools
+- Easier to extract into services later if needed
+
+### Our Decision: Layered Monolith Approach
 
 We chose a layered monolithic architecture (for now) with four clear layers (Presentation, Application, Domain, Infrastructure) rather than partitioning into multiple services for several reasons.
 
 A single deployable service is easier to develop, test, and deploy for a small café POS system such as this. There was no need to overcomplicate things for such a small project with a defined scope. Performance was also taken into consideration, as in-process method calls are faster than network communication. With a monolith architecture, development speed is quicker as there are no complexity issues due to distributed systems such as API contracts, network communication, and consistency issues (all learned about simultaneously in another module, Applied System Design with Andrew Ju). On top of all that, as we were such a small team of 2, working in a single codebase was not awkward and actually helped with our understanding of the system.
+
+### Trade-offs
+
+**What we gained:**
+- Simple deployment - just one JAR file to run
+- Fast in-process communication with no network overhead
+- Easier debugging with the entire call stack visible in one place
+- Straightforward testing without needing to mock network calls
+- Simple transaction boundaries without distributed coordination
+
+**What we gave up:**
+- Cannot scale individual components independently (if Payments get heavy load, we have to scale the entire application)
+- Any change requires full system redeployment
+- Locked into a single technology stack for the entire system
+- Potential for layer boundary violations if we're not disciplined
+- If one component crashes severely, it could bring down the whole system
 
 ### Future Partitioning Candidates
 
@@ -35,6 +74,12 @@ Currently we do direct method calls (e.g., `controller.checkout(orderId);`) whic
 - **API Gateway** for frontend to access multiple services through a single endpoint
 
 Our current EventBus demonstrates the publish-subscribe pattern that would scale to a message broker in a distributed system.
+
+### Connection to Our Architecture
+
+As shown in our architecture diagram, the EventBus sits in the Application layer and acts as a connector between components. It already decouples the Presentation layer from direct domain access by using events and application services. When domain events occur (such as `OrderPaid`), application services react to them through the EventBus.
+
+This design means the EventBus is the natural seam where we would introduce network boundaries if we needed to partition into services. The Repository pattern (with `OrderRepository` interface and `InMemoryOrderRepository` implementation) is another clear seam - we could swap the implementation for a database or even a REST client calling an external Order Service without changing any domain code.
 
 ## Build & Run
 
