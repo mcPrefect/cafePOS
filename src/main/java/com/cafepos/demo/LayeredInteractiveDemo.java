@@ -169,10 +169,11 @@ public final class LayeredInteractiveDemo {
 
         // Iterator Pattern: iterate through composite tree
         for (MenuComponent component : cafeMenu) {
-            if (component instanceof MenuItem item) {
-                view.print("    " + item.name() + " ... " + item.price());
-            } else if (component instanceof Menu menu) {
-                view.print("\n  " + menu.name().toUpperCase());
+            switch (component) {
+                case MenuItem item -> view.print("    " + item.name() + " ... " + item.price());
+                case Menu menu -> view.print("\n  " + menu.name().toUpperCase());
+                default -> {
+                }
             }
         }
 
