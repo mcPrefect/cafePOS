@@ -7,6 +7,20 @@ import com.cafepos.domain.Order;
 import com.cafepos.factory.ProductFactory;
 import com.cafepos.payment.PaymentStrategy;
 
+/**
+ * OrderService delegates commands to the Order domain object.
+ * 
+ * Smell fix:
+ * Originally used reflection to manipulate Order's private items field:
+ *   var field = Order.class.getDeclaredField("items");
+ *   field.setAccessible(true);
+ *   field.set(order, items);
+ * 
+ * This broke encapsulation and was fragile.
+ * Refactored to use Order's public API instead (see removeLastItem below).
+ * Went from 13 lines of reflection → 2 lines using domain API.
+ */
+
 public final class OrderService {
     private final ProductFactory factory = new ProductFactory();
     private final Order order;
