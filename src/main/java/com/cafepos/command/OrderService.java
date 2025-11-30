@@ -35,6 +35,7 @@ public final class OrderService {
         System.out.println("[Service] Added " + p.name() + " x" + qty);
     }
 
+    // Smell fixed here
     public void removeLastItem() {
         order.removeLastItem();
         System.out.println("[Service] Removed last item");
