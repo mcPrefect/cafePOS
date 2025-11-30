@@ -22,18 +22,8 @@ public final class OrderService {
     }
 
     public void removeLastItem() {
-        var items = new java.util.ArrayList<>(order.items());
-        if (!items.isEmpty()) {
-            items.removeLast();
-            try {
-                var field = Order.class.getDeclaredField("items");
-                field.setAccessible(true);
-                field.set(order, items);
-            } catch (NoSuchFieldException | IllegalAccessException e) {
-                throw new IllegalStateException("Could not remove item reflectively; adapt your Order API.");
-            }
-            System.out.println("[Service] Removed last item");
-        }
+        order.removeLastItem();
+        System.out.println("[Service] Removed last item");
     }
 
     public Money totalWithTax(int percent) {
