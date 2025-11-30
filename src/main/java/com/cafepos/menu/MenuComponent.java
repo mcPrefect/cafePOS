@@ -71,7 +71,7 @@ public abstract class MenuComponent implements Iterable<MenuComponent> {
     public Stream<MenuItem> allItems() {
         var list = new ArrayList<MenuItem>();
         for (MenuComponent mc : this) {
-            if (mc instanceof MenuItem) list.add((MenuItem) mc);
+            if (mc instanceof MenuItem menuItem) list.add(menuItem);
         }
         return list.stream();
     }
