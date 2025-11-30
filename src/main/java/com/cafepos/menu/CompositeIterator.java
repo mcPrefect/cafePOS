@@ -31,8 +31,8 @@ public class CompositeIterator implements Iterator<MenuComponent> {
         if (!emittedRoot) {
             emittedRoot = true;
             // push children AFTER emitting root (if root is a Menu)
-            if (root instanceof Menu) {
-                stack.push(((Menu) root).childrenIterator());
+            if (root instanceof Menu menu) {
+                stack.push(menu.childrenIterator());
             }
             return root;
         }
@@ -40,8 +40,8 @@ public class CompositeIterator implements Iterator<MenuComponent> {
             Iterator<MenuComponent> it = stack.peek();
             if (it.hasNext()) {
                 MenuComponent next = it.next();
-                if (next instanceof Menu) {
-                    stack.push(((Menu) next).childrenIterator());
+                if (next instanceof Menu menu) {
+                    stack.push(menu.childrenIterator());
                 }
                 return next;
             } else {
